@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const DATA_DIR = process.env.VERCEL
-  ? path.join('/tmp', 'skyhire-data')
+  ? path.join('/tmp', 'jobify-data')
   : path.join(__dirname, 'data');
 const SECRET_PATH = path.join(DATA_DIR, '.secret');
 
@@ -12,7 +12,7 @@ function getSecret() {
   if (process.env.VERCEL) {
     return crypto
       .createHash('sha256')
-      .update(process.env.VERCEL_PROJECT_ID || 'skyhire-vercel-default-secret')
+      .update(process.env.VERCEL_PROJECT_ID || 'jobify-vercel-default-secret')
       .digest('hex');
   }
   fs.mkdirSync(DATA_DIR, { recursive: true });

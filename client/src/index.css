@@ -957,3 +957,494 @@ a:hover {
 .detail-list li {
   margin-bottom: 0.35rem;
 }
+
+/* ==========================================================================
+   ENHANCED EXTENSIONS (Jobify Full-Lifecycle Suite)
+   ========================================================================== */
+
+/* Extended Status Badges */
+.status-badge.status-saved {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  border-color: var(--border-strong);
+}
+
+.status-badge.status-shortlisted {
+  background: var(--bg-primary-tint);
+  color: var(--text-primary-strong);
+  border-color: var(--border-primary);
+}
+
+.status-badge.status-assessment {
+  background: var(--bg-rose-tint);
+  color: var(--text-rose);
+  border-color: var(--border-rose);
+}
+
+.status-badge.status-withdrawn {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  border-color: var(--border-color);
+  text-decoration: line-through;
+}
+
+/* Category Badges for Saved Jobs */
+.badge-cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-cat-priority {
+  background: var(--primary-600);
+  color: var(--white);
+}
+
+.badge-cat-planning {
+  background: var(--rose-700);
+  color: var(--white);
+}
+
+.badge-cat-interested {
+  background: var(--bg-primary-tint);
+  color: var(--text-primary-strong);
+  border: 1px solid var(--border-primary);
+}
+
+.badge-cat-not {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+/* Proximity Badges for Job Openings */
+.badge-closing-soon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.16rem 0.5rem;
+  border-radius: 999px;
+  background: var(--bg-rose-tint);
+  color: var(--text-rose);
+  border: 1px solid var(--border-rose);
+  animation: pulseClosing 2s infinite ease-in-out;
+}
+
+@keyframes pulseClosing {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
+.badge-expired {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.16rem 0.5rem;
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+}
+
+/* Navbar Notification Count Pill */
+.nav-badge-pill {
+  background: var(--primary-600);
+  color: var(--white);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.42rem;
+  border-radius: 999px;
+  margin-left: 0.25rem;
+}
+
+/* Sub-Navigation & Section Tab Pills */
+.subnav-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
+}
+
+.subnav-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.subnav-tab:hover {
+  background: var(--bg-subtle);
+  color: var(--text-main);
+}
+
+.subnav-tab.active {
+  background: var(--bg-primary-tint);
+  color: var(--text-primary-strong);
+  border-color: var(--border-primary);
+}
+
+/* Dashboard Overview Widgets */
+.dashboard-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.widget-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.widget-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.widget-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.widget-item {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  transition: border-color 0.15s ease;
+}
+
+.widget-item:hover {
+  border-color: var(--primary-500);
+}
+
+/* Interactive Calendar Styles */
+.calendar-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--border-color);
+  gap: 1px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.calendar-day-header {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 0.65rem 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.calendar-cell {
+  background: var(--bg-surface);
+  min-height: 105px;
+  padding: 0.45rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  overflow: hidden;
+}
+
+.calendar-cell.other-month {
+  background: var(--bg-subtle);
+  opacity: 0.45;
+}
+
+.calendar-cell.today {
+  box-shadow: inset 0 0 0 2px var(--primary-600);
+}
+
+.calendar-date-number {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.2rem;
+}
+
+.calendar-event-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.18rem 0.4rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: opacity 0.15s ease;
+}
+
+.calendar-event-pill:hover {
+  opacity: 0.85;
+}
+
+.calendar-event-interview {
+  background: var(--bg-rose-tint);
+  color: var(--text-rose);
+  border-color: var(--border-rose);
+}
+
+.calendar-event-deadline {
+  background: var(--bg-primary-tint);
+  color: var(--text-primary-strong);
+  border-color: var(--border-primary);
+}
+
+.calendar-event-reminder {
+  background: var(--bg-subtle);
+  color: var(--text-main);
+  border-color: var(--border-strong);
+}
+
+/* Analytics Charts & Progress Bars */
+.analytics-chart-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chart-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: 0.84rem;
+}
+
+.chart-bar-label {
+  width: 140px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chart-bar-track {
+  flex: 1;
+  height: 18px;
+  background: var(--bg-subtle);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border-color);
+}
+
+.chart-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-600), var(--rose-700));
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.chart-bar-value {
+  width: 48px;
+  text-align: right;
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 0.82rem;
+}
+
+/* AI Job Matcher Meter & Tags */
+.match-score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  background: var(--bg-primary-tint);
+  color: var(--text-primary-strong);
+  border: 1px solid var(--border-primary);
+}
+
+.skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+}
+
+.skill-chip.match {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+[data-theme='dark'] .skill-chip.match {
+  background: rgba(22, 101, 52, 0.28);
+  color: #86efac;
+  border-color: rgba(134, 239, 172, 0.35);
+}
+
+.skill-chip.gap {
+  background: var(--bg-rose-tint);
+  color: var(--text-rose);
+  border: 1px solid var(--border-rose);
+}
+
+.skill-chip.neutral {
+  background: var(--bg-subtle);
+  color: var(--text-body);
+  border: 1px solid var(--border-color);
+}
+
+/* Document Cards */
+.doc-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.15rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  transition: border-color 0.15s ease;
+}
+
+.doc-card:hover {
+  border-color: var(--primary-500);
+}
+
+.doc-icon-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: var(--bg-primary-tint);
+  color: var(--primary-600);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+/* Timeline Activity Stream */
+.timeline-stream {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-left: 1.5rem;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.timeline-stream::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--border-color);
+}
+
+.timeline-entry {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.timeline-entry::before {
+  content: '';
+  position: absolute;
+  left: -1.5rem;
+  top: 5px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--primary-600);
+  box-shadow: 0 0 0 3px var(--bg-surface);
+}
+
+.timeline-entry.recruiter::before {
+  background: var(--rose-700);
+}
+
+.timeline-meta {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.timeline-text {
+  font-size: 0.88rem;
+  color: var(--text-main);
+  font-weight: 500;
+}

@@ -1,24 +1,40 @@
 import React, { useState } from 'react';
-import { Plus, Edit3, Trash2, Users, Eye, EyeOff, FileText, ExternalLink, Save, Share2 } from 'lucide-react';
+import {
+  Plus,
+  Edit3,
+  Trash2,
+  Users,
+  Eye,
+  EyeOff,
+  FileText,
+  ExternalLink,
+  Save,
+  Share2,
+  ShieldAlert,
+  CheckCircle,
+  XCircle,
+  AlertTriangle
+} from 'lucide-react';
 import { api } from '../api';
-import { formatDate, formatSalary, statusBadgeClass } from '../utils';
-
-const APP_STATUS_OPTIONS = ['Submitted', 'Under Review', 'Interview', 'Offer', 'Rejected'];
+import { formatDate, formatSalary, statusBadgeClass, ALL_APPLICATION_STATUSES } from '../utils';
 
 export default function AdminDashboard({
-  jobs,
+  jobs = [],
   stats,
-  allApplications,
+  allApplications = [],
+  reports = [],
   onOpenPostJob,
   onEditJob,
   onToggleJobStatus,
   onDeleteJob,
   onInspectApplicants,
   onUpdateApplication,
+  onUpdateReport,
   onShareJob
 }) {
-  const [subTab, setSubTab] = useState('jobs');
+  const [subTab, setSubTab] = useState('jobs'); // 'jobs' | 'applicants' | 'reports'
   const [appStatusFilter, setAppStatusFilter] = useState('All');
+  const [reportStatusFilter, setReportStatusFilter] = useState('All');
   const [notesDraft, setNotesDraft] = useState({});
   const [savingAppId, setSavingAppId] = useState('');
 
@@ -26,6 +42,11 @@ export default function AdminDashboard({
     appStatusFilter === 'All'
       ? allApplications
       : allApplications.filter((a) => a.status === appStatusFilter);
+
+  const filteredReports =
+    reportStatusFilter === 'All'
+      ? reports
+      : reports.filter((r) => r.status === reportStatusFilter);
 
   async function saveAppChange(appItem, nextStatus) {
     setSavingAppId(appItem.id);
@@ -36,6 +57,8 @@ export default function AdminDashboard({
       setSavingAppId('');
     }
   }
+
+  const pendingReportsCount = reports.filter((r) => r.status === 'Pending').length;
 
   return (
     <div>
@@ -53,8 +76,10 @@ export default function AdminDashboard({
           <div className="stat-value">{stats?.totalApplications ?? 0}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">In Interview Stage</div>
-          <div className="stat-value">{stats?.byStatus?.Interview ?? 0}</div>
+          <div className="stat-label">Reported Vacancies</div>
+          <div className="stat-value" style={{ color: pendingReportsCount > 0 ? 'var(--text-rose)' : 'inherit' }}>
+            {pendingReportsCount} Pending
+          </div>
         </div>
       </div>
 
@@ -74,6 +99,13 @@ export default function AdminDashboard({
           >
             All Applications ({allApplications.length})
           </button>
+          <button
+            type="button"
+            className={`nav-tab ${subTab === 'reports' ? 'active' : ''}`}
+            onClick={() => setSubTab('reports')}
+          >
+            Reported Vacancies {pendingReportsCount > 0 ? `(${pendingReportsCount})` : ''}
+          </button>
         </div>
 
         <button type="button" className="btn btn-primary" onClick={onOpenPostJob}>
@@ -82,7 +114,8 @@ export default function AdminDashboard({
         </button>
       </div>
 
-      {subTab === 'jobs' ? (
+      {/* SUBTAB 1: Posted Jobs */}
+      {subTab === 'jobs' && (
         jobs.length === 0 ? (
           <div className="empty-state">
             <h3>No job openings posted yet</h3>
@@ -178,7 +211,10 @@ export default function AdminDashboard({
             </table>
           </div>
         )
-      ) : (
+      )}
+
+      {/* SUBTAB 2: All Applications */}
+      {subTab === 'applicants' && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.85rem' }}>
             <select
@@ -187,8 +223,8 @@ export default function AdminDashboard({
               value={appStatusFilter}
               onChange={(e) => setAppStatusFilter(e.target.value)}
             >
-              <option value="All">All Statuses</option>
-              {APP_STATUS_OPTIONS.map((st) => (
+              <option value="All">All Statuses ({allApplications.length})</option>
+              {ALL_APPLICATION_STATUSES.map((st) => (
                 <option key={st} value={st}>
                   {st}
                 </option>
@@ -253,7 +289,7 @@ export default function AdminDashboard({
                   <div
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '170px 1fr auto',
+                      gridTemplateColumns: '190px 1fr auto',
                       gap: '0.6rem',
                       alignItems: 'center',
                       paddingTop: '0.65rem',
@@ -266,7 +302,7 @@ export default function AdminDashboard({
                       disabled={savingAppId === appItem.id}
                       onChange={(e) => saveAppChange(appItem, e.target.value)}
                     >
-                      {APP_STATUS_OPTIONS.map((opt) => (
+                      {ALL_APPLICATION_STATUSES.map((opt) => (
                         <option key={opt} value={opt}>
                           {opt}
                         </option>
@@ -276,7 +312,7 @@ export default function AdminDashboard({
                     <input
                       className="input"
                       type="text"
-                      placeholder="Recruiter note for candidate..."
+                      placeholder="Recruiter update / feedback for candidate..."
                       value={
                         notesDraft[appItem.id] !== undefined
                           ? notesDraft[appItem.id]
@@ -294,9 +330,83 @@ export default function AdminDashboard({
                       onClick={() => saveAppChange(appItem, appItem.status)}
                     >
                       <Save size={14} />
-                      Save Note
+                      Save
                     </button>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* SUBTAB 3: Reported Vacancies */}
+      {subTab === 'reports' && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.85rem' }}>
+            <select
+              className="select"
+              style={{ maxWidth: 220 }}
+              value={reportStatusFilter}
+              onChange={(e) => setReportStatusFilter(e.target.value)}
+            >
+              <option value="All">All Reports ({reports.length})</option>
+              <option value="Pending">Pending</option>
+              <option value="Reviewed">Reviewed</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Dismissed">Dismissed</option>
+            </select>
+          </div>
+
+          {filteredReports.length === 0 ? (
+            <div className="empty-state">
+              <ShieldAlert size={36} color="var(--primary-600)" />
+              <h3>No reported vacancies</h3>
+              <p>Job reports submitted by users for suspicious or misleading postings will appear here for review.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              {filteredReports.map((report) => (
+                <div key={report.id} className="card">
+                  <div className="card-header">
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
+                        <span className="badge badge-danger">Reason: {report.reason}</span>
+                        <span className="badge badge-subtle">{report.status}</span>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                          Reported on {formatDate(report.createdAt)}
+                        </span>
+                      </div>
+                      <h4 className="card-title">
+                        Listing: {report.jobTitle} <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>at</span> {report.company}
+                      </h4>
+                      <div className="card-company">
+                        Reporter: {report.reporterEmail}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                      <select
+                        className="select select-sm"
+                        value={report.status}
+                        onChange={(e) => onUpdateReport(report.id, { status: e.target.value })}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Reviewed">Reviewed</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Dismissed">Dismissed</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {report.details && (
+                    <div style={{ background: 'var(--bg-subtle)', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-sm)', fontSize: '0.86rem' }}>
+                      <strong style={{ display: 'block', fontSize: '0.76rem', color: 'var(--text-main)', marginBottom: '0.2rem' }}>
+                        Report Details:
+                      </strong>
+                      <p style={{ margin: 0, color: 'var(--text-body)' }}>{report.details}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -306,4 +416,3 @@ export default function AdminDashboard({
     </div>
   );
 }
-

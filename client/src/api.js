@@ -47,6 +47,7 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  // Auth
   login: (email, password) =>
     request('/auth/login', {
       method: 'POST',
@@ -61,6 +62,15 @@ export const api = {
 
   me: () => request('/auth/me'),
 
+  // Profile
+  getProfile: () => request('/profile'),
+  updateProfile: (payload) =>
+    request('/profile', {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    }),
+
+  // Jobs
   getJobs: (params = {}) => {
     const qs = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
@@ -89,21 +99,144 @@ export const api = {
       method: 'DELETE'
     }),
 
+  reportJob: (jobId, payload) =>
+    request(`/jobs/${jobId}/report`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+
+  // Saved Jobs
+  getSavedJobs: () => request('/saved-jobs'),
+  saveJob: (payload) =>
+    request('/saved-jobs', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  updateSavedJob: (id, payload) =>
+    request(`/saved-jobs/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    }),
+  deleteSavedJob: (id) =>
+    request(`/saved-jobs/${id}`, {
+      method: 'DELETE'
+    }),
+
+  // Applications
   applyToJob: (jobId, formData) =>
     request(`/jobs/${jobId}/apply`, {
       method: 'POST',
       body: formData
     }),
 
-  getMyApplications: () => request('/my-applications'),
+  getMyApplications: (params = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') qs.set(k, v);
+    });
+    const str = qs.toString();
+    return request(`/my-applications${str ? `?${str}` : ''}`);
+  },
+
+  getApplication: (id) => request(`/applications/${id}`),
+
+  updateApplication: (id, payload) =>
+    request(`/applications/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    }),
+
+  addTimelineEvent: (id, payload) =>
+    request(`/applications/${id}/timeline`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+
+  toggleArchiveApplication: (id) =>
+    request(`/applications/${id}/archive`, {
+      method: 'PATCH'
+    }),
 
   withdrawApplication: (id) =>
     request(`/applications/${id}`, {
       method: 'DELETE'
     }),
 
-  getAdminStats: () => request('/admin/stats'),
+  getResumeDownloadUrl: (applicationId) => {
+    const token = getStoredToken();
+    return `/api/applications/${applicationId}/resume?token=${encodeURIComponent(token)}`;
+  },
 
+  // Reminders
+  getReminders: () => request('/reminders'),
+  createReminder: (payload) =>
+    request('/reminders', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  updateReminder: (id, payload) =>
+    request(`/reminders/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    }),
+  deleteReminder: (id) =>
+    request(`/reminders/${id}`, {
+      method: 'DELETE'
+    }),
+
+  // Documents
+  getDocuments: () => request('/documents'),
+  uploadDocument: (formData) =>
+    request('/documents', {
+      method: 'POST',
+      body: formData
+    }),
+  updateDocument: (id, payload) =>
+    request(`/documents/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    }),
+  deleteDocument: (id) =>
+    request(`/documents/${id}`, {
+      method: 'DELETE'
+    }),
+  getDocumentDownloadUrl: (docId) => {
+    const token = getStoredToken();
+    return `/api/documents/${docId}/download?token=${encodeURIComponent(token)}`;
+  },
+
+  // Interviews
+  getInterviews: () => request('/interviews'),
+  createInterview: (payload) =>
+    request('/interviews', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  updateInterview: (id, payload) =>
+    request(`/interviews/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    }),
+  deleteInterview: (id) =>
+    request(`/interviews/${id}`, {
+      method: 'DELETE'
+    }),
+
+  // Calendar & Dashboard
+  getCalendarEvents: () => request('/calendar/events'),
+  getDashboardOverview: (range = 'all') => request(`/dashboard/overview?range=${range}`),
+
+  // Analytics
+  getAnalytics: (range = 'all') => request(`/analytics?range=${range}`),
+
+  // AI Matching
+  matchJob: (jobId) =>
+    request(`/match-job/${jobId}`, {
+      method: 'POST'
+    }),
+
+  // Admin
+  getAdminStats: () => request('/admin/stats'),
   getAdminApplications: (params = {}) => {
     const qs = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
@@ -112,16 +245,25 @@ export const api = {
     const str = qs.toString();
     return request(`/admin/applications${str ? `?${str}` : ''}`);
   },
-
   updateApplicationStatus: (id, payload) =>
     request(`/admin/applications/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(payload)
     }),
+  getAdminReports: () => request('/admin/reports'),
+  updateAdminReport: (id, payload) =>
+    request(`/admin/reports/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    }),
 
-  getResumeDownloadUrl: (applicationId) => {
+  // Export URLs
+  getApplicationsExportUrl: () => {
     const token = getStoredToken();
-    return `/api/applications/${applicationId}/resume?token=${encodeURIComponent(token)}`;
+    return `/api/export/applications?token=${encodeURIComponent(token)}`;
+  },
+  getSavedJobsExportUrl: () => {
+    const token = getStoredToken();
+    return `/api/export/saved-jobs?token=${encodeURIComponent(token)}`;
   }
 };
-

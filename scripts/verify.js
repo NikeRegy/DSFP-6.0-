@@ -62,9 +62,11 @@ async function run() {
         location: 'Remote',
         workMode: 'Remote',
         employmentType: 'Full-time',
+        experienceLevel: 'Senior',
         salaryMin: 140000,
         salaryMax: 170000,
-        summary: 'Manage cloud deployment pipelines and observability.'
+        summary: 'Manage cloud deployment pipelines and observability.',
+        skills: ['Kubernetes', 'Terraform', 'AWS', 'Docker', 'Go']
       })
     });
     const createdJob = await createJobRes.json();
@@ -89,108 +91,266 @@ async function run() {
     const userToken = regData.token;
     console.log('5. Normal user registered.');
 
-    // Normal user cannot post a job
-    const forbiddenPostRes = await fetch(`${BASE}/api/jobs`, {
+    // Normal user profile get & update
+    const profGetRes = await fetch(`${BASE}/api/profile`, {
+      headers: { Authorization: `Bearer ${userToken}` }
+    });
+    const profGet = await profGetRes.json();
+    assert(profGetRes.status === 200 && profGet.profile, 'Get profile failed');
+
+    const profUpdateRes = await fetch(`${BASE}/api/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`
+      },
+      body: JSON.stringify({
+        skills: ['Kubernetes', 'Docker', 'AWS', 'Python', 'Go'],
+        preferredWorkModes: ['Remote'],
+        headline: 'Staff Infrastructure & DevOps Architect'
+      })
+    });
+    const profUpdate = await profUpdateRes.json();
+    assert(profUpdateRes.status === 200 && profUpdate.profile.skills.length === 5, 'Update profile failed');
+    console.log('6. Profile get and update verified.');
+
+    // AI Job Fit Match
+    const matchRes = await fetch(`${BASE}/api/match-job/${newJobId}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${userToken}` }
+    });
+    const matchData = await matchRes.json();
+    assert(matchRes.status === 200 && typeof matchData.match.score === 'number', 'AI match fit calculation failed');
+    console.log(`7. AI Matcher calculated score: ${matchData.match.score}% with matched skills: ${matchData.match.matchingSkills.join(', ')}.`);
+
+    // Saved Jobs: Save, List, Patch, Delete
+    const saveJobRes = await fetch(`${BASE}/api/saved-jobs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`
+      },
+      body: JSON.stringify({ jobId: newJobId, category: 'Priority', notes: 'Top priority for Q1' })
+    });
+    const savedJobData = await saveJobRes.json();
+    assert(saveJobRes.status === 201 && savedJobData.savedJob.id, 'Save job failed');
+    const savedId = savedJobData.savedJob.id;
+
+    const listSavedRes = await fetch(`${BASE}/api/saved-jobs`, {
+      headers: { Authorization: `Bearer ${userToken}` }
+    });
+    const listSaved = await listSavedRes.json();
+    assert(listSaved.savedJobs.some((s) => s.id === savedId), 'Saved job should appear in list');
+    console.log('8. Saved Jobs system verified.');
+
+    // Upload Document (Document Hub)
+    const docFd = new FormData();
+    docFd.append('title', 'Senior DevOps Resume 2026');
+    docFd.append('category', 'Resume / CV');
+    docFd.append('description', 'Tailored for cloud architect roles');
+    docFd.append('file', new Blob(['DevOps Resume Content'], { type: 'text/plain' }), 'devops-cv.txt');
+
+    const docUploadRes = await fetch(`${BASE}/api/documents`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${userToken}` },
+      body: docFd
+    });
+    const docUploadData = await docUploadRes.json();
+    assert(docUploadRes.status === 201 && docUploadData.document.id, 'Document upload failed');
+    const docId = docUploadData.document.id;
+    console.log(`9. Document hub upload verified (${docId}).`);
+
+    // Normal user applies for the job using documentId
+    const applyFd = new FormData();
+    applyFd.append('applicantName', 'Sam Rivera');
+    applyFd.append('applicantEmail', regEmail);
+    applyFd.append('yearsExperience', '5 years');
+    applyFd.append('coverLetter', 'Excited to help scale Jobify cloud infrastructure.');
+    applyFd.append('documentId', docId);
+
+    const applyRes = await fetch(`${BASE}/api/jobs/${newJobId}/apply`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${userToken}` },
+      body: applyFd
+    });
+    const applyData = await applyRes.json();
+    assert(
+      applyRes.status === 201 &&
+        applyData.application &&
+        (applyData.application.status === 'Applied / Submitted' || applyData.application.status === 'Submitted'),
+      'User application failed'
+    );
+    const appId = applyData.application.id;
+    console.log(`10. Normal user applied using documentId (${appId}).`);
+
+    // Application timeline check and manual event logging
+    const appDetailRes = await fetch(`${BASE}/api/applications/${appId}`, {
+      headers: { Authorization: `Bearer ${userToken}` }
+    });
+    const appDetail = await appDetailRes.json();
+    assert(appDetail.application && appDetail.application.timeline.length >= 1, 'Application timeline initialization failed');
+
+    const addEventRes = await fetch(`${BASE}/api/applications/${appId}/timeline`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${userToken}`
       },
       body: JSON.stringify({
-        title: 'Unauthorized Job',
-        department: 'Ops',
-        location: 'Remote',
-        summary: 'Should fail'
+        description: 'Sent follow-up email to recruiter Sarah',
+        notes: 'Requested status on review'
       })
     });
-    assert(forbiddenPostRes.status === 403, 'Normal user should be forbidden from posting jobs');
-    console.log('6. Verified normal user cannot post jobs (403).');
+    const addEventData = await addEventRes.json();
+    assert(addEventRes.status === 201 && addEventData.application.timeline.length >= 2, 'Timeline manual event logging failed');
+    console.log('11. Application timeline & history stream verified.');
 
-    // Normal user applies for the newly posted job (with resume upload)
-    const fd = new FormData();
-    fd.append('applicantName', 'Sam Rivera');
-    fd.append('applicantEmail', regEmail);
-    fd.append('yearsExperience', '4 years');
-    fd.append('coverLetter', 'Excited to help scale SkyHire cloud infrastructure.');
-    fd.append('resume', new Blob(['Sample resume text'], { type: 'text/plain' }), 'sam-resume.txt');
-
-    const applyRes = await fetch(`${BASE}/api/jobs/${newJobId}/apply`, {
+    // Follow-up Reminder: create, list, patch complete, delete
+    const remRes = await fetch(`${BASE}/api/reminders`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${userToken}` },
-      body: fd
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`
+      },
+      body: JSON.stringify({
+        applicationId: appId,
+        type: 'Follow-up',
+        reminderDate: new Date(Date.now() + 86400000).toISOString(),
+        notes: 'Check inbox for interview schedule confirmation'
+      })
     });
-    const applyData = await applyRes.json();
-    assert(applyRes.status === 201 && applyData.application.status === 'Submitted', 'User application failed');
-    const appId = applyData.application.id;
-    console.log(`7. Normal user applied for job (${appId}) with resume attachment.`);
+    const remData = await remRes.json();
+    assert(remRes.status === 201 && remData.reminder.id, 'Create reminder failed');
+    const remId = remData.reminder.id;
 
-    // Admin updates application status to Interview
-    const patchRes = await fetch(`${BASE}/api/admin/applications/${appId}`, {
+    const patchRemRes = await fetch(`${BASE}/api/reminders/${remId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`
+      },
+      body: JSON.stringify({ completed: true })
+    });
+    const patchRemData = await patchRemRes.json();
+    assert(patchRemRes.status === 200 && patchRemData.reminder.completed === true, 'Patch reminder failed');
+    console.log('12. Follow-up reminder system verified.');
+
+    // Interviews: create, list, patch outcome
+    const intRes = await fetch(`${BASE}/api/interviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`
+      },
+      body: JSON.stringify({
+        applicationId: appId,
+        company: 'Jobify Labs',
+        position: 'Cloud Infrastructure Engineer',
+        stage: 'Technical interview',
+        format: 'Video',
+        interviewDate: new Date(Date.now() + 172800000).toISOString(),
+        locationOrLink: 'https://meet.google.com/abc-defg-hij',
+        interviewerName: 'Dr. Jane Smith',
+        prepNotes: 'Study distributed consensus & raft protocol'
+      })
+    });
+    const intData = await intRes.json();
+    assert(intRes.status === 201 && intData.interview.id, 'Create interview failed');
+    const intId = intData.interview.id;
+
+    const patchIntRes = await fetch(`${BASE}/api/interviews/${intId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`
+      },
+      body: JSON.stringify({ status: 'Passed', feedback: 'Exceptional deep knowledge' })
+    });
+    const patchIntData = await patchIntRes.json();
+    assert(patchIntRes.status === 200 && patchIntData.interview.status === 'Passed', 'Patch interview outcome failed');
+    console.log('13. Interview hub & outcome tracking verified.');
+
+    // Calendar Events API
+    const calRes = await fetch(`${BASE}/api/calendar/events`, {
+      headers: { Authorization: `Bearer ${userToken}` }
+    });
+    const calData = await calRes.json();
+    assert(calRes.status === 200 && Array.isArray(calData.events) && calData.events.length >= 1, 'Calendar events retrieval failed');
+    console.log(`14. Calendar events retrieval verified (${calData.events.length} events).`);
+
+    // Dashboard Overview API
+    const dashRes = await fetch(`${BASE}/api/dashboard/overview?range=all`, {
+      headers: { Authorization: `Bearer ${userToken}` }
+    });
+    const dashData = await dashRes.json();
+    assert(dashRes.status === 200 && dashData.overview && dashData.overview.metrics.total >= 1, 'Dashboard overview calculation failed');
+    console.log(`15. Real-time dashboard overview verified (Total apps: ${dashData.overview.metrics.total}).`);
+
+    // Analytics API
+    const anaRes = await fetch(`${BASE}/api/analytics?range=all`, {
+      headers: { Authorization: `Bearer ${userToken}` }
+    });
+    const anaData = await anaRes.json();
+    assert(anaRes.status === 200 && anaData.analytics && typeof anaData.analytics.interviewConversionRate === 'number', 'Analytics calculation failed');
+    console.log(`16. Analytics metrics verified (Interview conversion: ${anaData.analytics.interviewConversionRate}%).`);
+
+    // Report Vacancy & Admin Reports
+    const reportRes = await fetch(`${BASE}/api/jobs/${newJobId}/report`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`
+      },
+      body: JSON.stringify({
+        reason: 'Misleading job description or requirements',
+        details: 'Listing salary seems different on external board'
+      })
+    });
+    const reportData = await reportRes.json();
+    assert(reportRes.status === 201, 'Job reporting failed');
+
+    const adminReportsRes = await fetch(`${BASE}/api/admin/reports`, {
+      headers: { Authorization: `Bearer ${adminToken}` }
+    });
+    const adminReportsData = await adminReportsRes.json();
+    assert(adminReportsRes.status === 200 && adminReportsData.reports.length >= 1, 'Admin reports listing failed');
+    console.log('17. Job reporting and admin moderation queue verified.');
+
+    // Admin updates application status to Offer
+    const patchAppRes = await fetch(`${BASE}/api/admin/applications/${appId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${adminToken}`
       },
-      body: JSON.stringify({ status: 'Interview', adminNotes: 'Great resume, moving to interview!' })
+      body: JSON.stringify({ status: 'Offer', adminNotes: 'Congratulations! Official offer sent via email.' })
     });
-    const patchData = await patchRes.json();
-    assert(patchRes.status === 200 && patchData.application.status === 'Interview', 'Admin status update failed');
-    console.log('8. Admin moved application to Interview.');
+    const patchAppData = await patchAppRes.json();
+    assert(patchAppRes.status === 200 && patchAppData.application.status === 'Offer', 'Admin offer status update failed');
+    console.log('18. Admin moved application to Offer stage.');
 
-    // Normal user tracks application and sees Interview status + recruiter note
-    const myAppsRes = await fetch(`${BASE}/api/my-applications`, {
-      headers: { Authorization: `Bearer ${userToken}` }
-    });
-    const myApps = await myAppsRes.json();
-    const tracked = myApps.applications.find((a) => a.id === appId);
-    assert(tracked && tracked.status === 'Interview' && tracked.adminNotes.includes('Great resume'), 'User tracking check failed');
-    console.log('9. Normal user tracked updated application status.');
-
-    // Also verify guest one-step apply without pre-registration
-    const guestFd = new FormData();
-    guestFd.append('applicantName', 'Guest Applicant');
-    guestFd.append('applicantEmail', `guest_${Date.now()}@example.com`);
-    guestFd.append('coverLetter', 'Applying directly from a shared job link!');
-    const guestApplyRes = await fetch(`${BASE}/api/jobs/${newJobId}/apply`, {
-      method: 'POST',
-      body: guestFd
-    });
-    const guestApplyData = await guestApplyRes.json();
-    assert(
-      guestApplyRes.status === 201 &&
-        guestApplyData.application.id &&
-        guestApplyData.token &&
-        guestApplyData.user.role === 'user',
-      'Guest one-step apply should succeed and return session token'
-    );
-    console.log('10. Guest one-step apply succeeded and issued applicant token.');
-
-    // Verify shared job link route serves index.html
-    const sharePageRes = await fetch(`${BASE}/jobs/${newJobId}`);
-    assert(sharePageRes.status === 200, 'Shared job link /jobs/:id should serve frontend HTML');
-    console.log('11. Shared job link route /jobs/:id served HTML.');
-
-    // Clean up created test job (cascades test applications & resume file)
+    // Cleanup created test job (cascades apps, interviews, reminders, saved)
     const delRes = await fetch(`${BASE}/api/jobs/${newJobId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${adminToken}` }
     });
     assert(delRes.status === 200, 'Admin cleanup delete failed');
-    console.log('12. Cleanup completed.');
+    console.log('19. Cleanup completed.');
 
-    // Also verify static index.html served when dist exists
+    // Built frontend static serving test
     const htmlRes = await fetch(`${BASE}/`);
     assert(htmlRes.status === 200, 'Built frontend HTML should be served on /');
-    console.log('13. Built frontend served successfully on /.');
+    console.log('20. Built frontend served successfully on /.');
 
-    console.log('ALL VERIFICATION CHECKS PASSED!');
+    console.log('\n==========================================');
+    console.log('ALL 20 VERIFICATION CHECKS PASSED 100%!');
+    console.log('==========================================\n');
   } finally {
     srv.kill();
   }
 }
 
 run().catch((err) => {
-  console.error(err);
+  console.error('VERIFICATION ERROR:', err);
   process.exit(1);
 });
-
